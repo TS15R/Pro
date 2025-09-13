@@ -9,6 +9,7 @@ local Survivors = workspace:WaitForChild("Players"):WaitForChild("Survivors")
 -- สร้าง ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
 ScreenGui.Name = "ToggleFollowGui"
 
 -- สร้าง Frame สำหรับ GUI
