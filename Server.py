@@ -3,14 +3,14 @@ import websockets
 import json
 import uuid
 
-clients = {}     # ws -> player_id
+clients = {}     # websocket -> player_id
 positions = {}   # player_id -> {x,y,z}
 
 async def broadcast(data):
-    msg = json.dumps(data)
+    message = json.dumps(data)
     for ws in list(clients.keys()):
         try:
-            await ws.send(msg)
+            await ws.send(message)
         except:
             pass
 
@@ -36,37 +36,39 @@ async def handler(ws):
         async for msg in ws:
             data = json.loads(msg)
 
-            if data["type"] == "chat":
+            if data.get("type") == "chat":
                 await broadcast({
                     "type": "chat",
-                    "message": f"{player_id}: {data['message']}"
+                    "message": f"{player_id}: {data.get('message', '')}"
                 })
 
-            if data["type"] == "position":
+            elif data.get("type") == "position":
                 positions[player_id] = {
-                    "x": data["x"],
-                    "y": data["y"],
-                    "z": data["z"]
+                    "x": data.get("x", 0),
+                    "y": data.get("y", 0),
+                    "z": data.get("z", 0)
                 }
 
                 await broadcast({
                     "type": "position",
                     "player_id": player_id,
-                    "x": data["x"],
-                    "y": data["y"],
-                    "z": data["z"]
+                    "x": positions[player_id]["x"],
+                    "y": positions[player_id]["y"],
+                    "z": positions[player_id]["z"]
                 })
 
     except:
         pass
     finally:
-        del clients[ws]
-        del positions[player_id]
+        if ws in clients:
+            del clients[ws]
+        if player_id in positions:
+            del positions[player_id]
         await broadcast_players()
 
 async def main():
+    print("Lobby Auto XYZ Server running on port 6074")
     async with websockets.serve(handler, "0.0.0.0", 6074):
-        print("Lobby Auto XYZ Server running on port 6074")
         await asyncio.Future()
 
 asyncio.run(main())
